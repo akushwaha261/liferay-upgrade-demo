@@ -90,7 +90,7 @@ public class TaskModelImpl extends BaseModelImpl<Task> implements TaskModel {
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ACME_Task (uuid_ VARCHAR(75) null,taskId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,title VARCHAR(75) null,description VARCHAR(75) null,status INTEGER,dueDate DATE null)";
+		"create table ACME_Task (uuid_ VARCHAR(75) null,taskId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,title VARCHAR(75) null,description STRING null,status INTEGER,dueDate DATE null)";
 
 	public static final String TABLE_SQL_DROP = "drop table ACME_Task";
 

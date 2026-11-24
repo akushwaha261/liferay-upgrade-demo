@@ -8,7 +8,7 @@ create table ACME_Task (
 	createDate DATE null,
 	modifiedDate DATE null,
 	title VARCHAR(75) null,
-	description VARCHAR(75) null,
+	description STRING null,
 	status INTEGER,
 	dueDate DATE null
 );

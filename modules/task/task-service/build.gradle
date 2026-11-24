@@ -1,0 +1,18 @@
+dependencies {
+	api project(":modules:task:task-api")
+
+	compileOnly group: "com.liferay.portal", name: "release.portal.api"
+
+	serviceBuilder group: "com.liferay", name: "com.liferay.portal.tools.service.builder", version: "1.0.496"
+}
+
+buildService {
+	apiDir = "../task-api/src/main/java"
+	testDir = "../task-test/src/testIntegration/java"
+}
+
+group = "com.acme.task"
+
+configurations.serviceBuilder {
+	resolutionStrategy.force "com.liferay:com.liferay.portal.tools.service.builder:1.0.496"
+}

@@ -1,0 +1,10 @@
+Bundle-Name: task-api
+Bundle-SymbolicName: com.acme.task.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.acme.task.exception,\
+	com.acme.task.model,\
+	com.acme.task.service,\
+	com.acme.task.service.persistence
+-check: EXPORTS
+-includeresource: META-INF/service.xml=../task-service/service.xml

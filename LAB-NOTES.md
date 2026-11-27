@@ -109,8 +109,75 @@
 - [ ] Experiment F step 3: sort `javax.sql` (Java EE or JDK) and fill in the table above
 - [ ] Experiment D check question: what do I write on Saturday to move the schema from 1.0.0 to 1.1.0?
 - [ ] Part 8: send experiments A and B answers, the quiz, and the Experiment C answers. Write 5 lines of English notes.
-- [ ] Part 9: company code comparison
-- [ ] Remove the Experiment E changes: `git restore` the Impl file and `service.properties`
-- [ ] Clean CE: remove the greeter JARs from Experiment C (`server/liferay-portal/osgi/modules`)
-- [ ] Delete the empty folder `server/liferay-portal-7.4.3.132-ga132`
-- [ ] Update CLAUDE.md sections 2 and 3
+- [x] Part 9: company code comparison (done by my tutor in the Lesson 4 PDF, Part 9)
+- [x] Remove the Experiment E changes (already gone, checked on 25 Nov)
+- [x] Clean CE: greeter JARs from Experiment C removed from `server/liferay-portal/osgi/modules`
+- [x] Delete the empty folder `server/liferay-portal-7.4.3.132-ga132`
+- [x] Update CLAUDE.md sections 2 and 3 (done by my tutor on 25 and 26 Nov)
+
+## 25-27 Nov 2026: Lesson 4, MVC portlet `task-web`
+
+**Status: closed by my decision on 27 Nov.** I move on to the next lesson. The code is written and
+compiles, but it was **never deployed**, and the experiments were not done (see "Still to do").
+
+### Done
+
+- **Part 1.1 (lab cleanup):**
+  - Gogo port: `module.framework.properties.osgi.console=localhost:11311` in CE `portal-ext.properties`. After a CE restart, port 11311 listens on `127.0.0.1`, and `blade sh "lb acme"` works on CE (`task-api` 1394 and `task-service` 1395 Active).
+  - Greeter JARs removed from CE `osgi/modules`. The empty folder `server/liferay-portal-7.4.3.132-ga132` and the empty `~/Documents/Programming/Liferay/.git` are deleted.
+- **Part 3.1:** `blade create -t mvc-portlet -p com.acme.task.web -c TaskWeb -d modules/task task-web`. The module sits next to `task-api` and `task-service` (`modules/task` is only a folder, it has no `bnd.bnd`).
+- **Parts 3.1-3.5 (new way of working: VS Code Claude wrote the code from the PDF listings, I reviewed it):**
+  - `build.gradle`: `compileOnly project(":modules:task:task-api")`
+  - `Language.properties`: widget title "Tasks" and the keys of the PDF (Blade's `taskweb.caption` kept, now unused)
+  - `ViewTasksMVCRenderCommand` (`/`, `/task/view_tasks`), `EditTaskMVCRenderCommand` (`/task/edit_task`), `AddTaskMVCActionCommand` (`/task/add_task`), `UpdateTaskStatusMVCActionCommand` (`/task/update_status`, **no permission check on purpose**)
+  - `init.jsp` (5 imports added), `view.jsp` (replaced), `edit_task.jsp` (new)
+  - `blade gw :modules:task:task-web:compileJava`: BUILD SUCCESSFUL. Not deployed.
+- **Code review:** I traced the whole "Add Task" and "Mark Done" flow (4 requests: render `/` → render `/task/edit_task` → action `/task/add_task` → redirect, render `/`).
+- **Company workspace scan** (private notes, not in this repo): which module types my company uses most.
+
+### Errors and fixes
+
+| Error (short) | Real cause | Fix | Time lost |
+|---|---|---|---|
+| Gogo port 11311 not listening after I added the console line | CE was started before the line was added. `portal-ext.properties` is read only at startup. | Restarted CE | ~5 min |
+| `compileJSP` failed: `ClassNotFoundException: com.liferay.taglib.ui.TableIteratorTei` (line 1 of every JSP, also Blade's `init.jsp`) | The Gradle JSP compiler loads the `liferay-ui` taglib definition, but the Liferay taglib classes are not on its classpath in this workspace. A tooling limit, not a code error. | None. The server compiles the JSPs at runtime, so the real check is the browser and `catalina.out`. | ~5 min |
+
+### Experiment results and my answers
+
+**Review question 1: what if `"mvc.command.name=/"` is missing?**
+- **My answer:** "the `/` will not show in the URL… it will not grab the values of tasks."
+- **Correction:**
+  - `mvc.command.name` is only a name (a string), not a path in the URL. The name `/` means "the command to use when the URL has no `mvcRenderCommandName`".
+  - Without it, `MVCPortlet` falls back to `view-template=/view.jsp` and includes the JSP directly, so no `setAttribute` happens.
+  - `view.jsp` line 5, `int status = (Integer)request.getAttribute("status")`, unboxes `null` → `NullPointerException`.
+
+**Review question 2: what if `task-service` is stopped?**
+- **My answer:** "all the dependent modules will stop and fail. I am not sure."
+- **Correction:** OSGi works per component, not per bundle. `task-web` stays Active. `ViewTasks…`, `AddTask…` and `UpdateTaskStatus…` (with `@Reference TaskLocalService`) become **unsatisfied**. `EditTask…` and the portlet class stay active. Without the `/` command, the page gives the same NPE as in question 1.
+
+**Review question 3 (link vs. form):** not answered.
+
+**My flow trace (corrections):**
+- `groupId` comes from `ThemeDisplay.getScopeGroupId()` (the current site), not from the service.
+- The Save button has no URL. The **form** has it (`<aui:form action="<%= addTaskURL %>">`).
+- `if (Validator.isNull(title))` is the **error** path: add the error, show the form again, `return`. Nothing is saved. Only a non-empty title reaches `addTask`.
+- I missed the hidden `redirect` field (where the browser goes after a successful save) and the end of each flow (`INSERT` / `UPDATE acme_task`).
+- Wording: a portlet looks for a **render command**. "Resource" is the name of the third phase.
+
+**Part 1.2, Part 1.3, Part 3.6, Experiments G, H, I, J, Part 6:** not done (see "Still to do").
+
+### Open questions for my tutor
+
+1. **I closed Lesson 4 without the deploy.** Should Lesson 5 start with Part 4 (deploy `task-web`, add the widget, verify)? The permission lesson needs the widget running, and Experiment I is the reason for Lesson 5.
+2. **`compileJSP` does not work in this workspace** (see Errors). Is there a simple way to put the Liferay taglib classes on its classpath, so I can check JSPs before a deploy? That would be useful in Week 2, after `upgradeJakarta`.
+3. **New request for the PDFs:** before each review or reading question, please add a short "study first" note (PDF section, file, concept). Without it, I could not answer the questions directly.
+
+### Still to do
+
+- [ ] Part 4: deploy `task-web`, check `STARTED com.acme.task.web`, add the widget, test Add / validation / Mark Done / Post-Redirect-Get
+- [ ] Part 5: Experiments G (XSS), H (namespace), I (another site's task), J (javax strings)
+- [ ] Part 3.6: the 5 reading questions, in English
+- [ ] Review question 3: why "Add Task" is a link (render URL) but "Mark Done" a POST form (action URL)
+- [ ] Part 1.2: prediction and result of the `servicecomponent` query
+- [ ] Part 1.3: Lesson 3 answers (Part 6, Experiment F step 3 `javax.sql`, Experiment D check question)
+- [ ] Part 6 (Lesson 4): three questions in English

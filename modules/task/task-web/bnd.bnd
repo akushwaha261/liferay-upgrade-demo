@@ -1,0 +1,7 @@
+Bundle-Name: task-web
+Bundle-SymbolicName: com.acme.task.web
+Bundle-Version: 1.0.0
+Export-Package: com.acme.task.web.constants
+Provide-Capability:\
+	liferay.language.resources;\
+		resource.bundle.base.name="content.Language"
